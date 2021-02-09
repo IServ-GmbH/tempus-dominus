@@ -759,7 +759,7 @@
                     currentMinute = viewDate.clone().startOf('h'),
                     html = [],
                     row = $('<tr>'),
-                    step = options.stepping === 1 ? 5 : options.stepping;
+                    step = options.incStepping === 1 ? 5 : options.incStepping;
 
                 while (viewDate.isSame(currentMinute, 'h')) {
                     if (currentMinute.minute() % (step * 4) === 0) {
@@ -1034,7 +1034,13 @@
                 },
 
                 incrementMinutes: function () {
-                    var newDate = date.clone().add(options.stepping, 'm');
+                    var newDate = date.clone();
+                    var offset = date.minutes() % options.incStepping;
+                    if (offset > 0) {
+                        newDate.add(options.incStepping - offset, 'm');
+                    } else {
+                        newDate.add(options.incStepping, 'm');
+                    }
                     if (isValid(newDate, 'm')) {
                         setValue(newDate);
                     }
@@ -1055,7 +1061,13 @@
                 },
 
                 decrementMinutes: function () {
-                    var newDate = date.clone().subtract(options.stepping, 'm');
+                    var newDate = date.clone();
+                    var offset = date.minutes() % options.incStepping;
+                    if (offset > 0) {
+                        newDate.subtract(offset, 'm');
+                    } else {
+                        newDate.subtract(options.incStepping, 'm');
+                    }
                     if (isValid(newDate, 'm')) {
                         setValue(newDate);
                     }
@@ -1808,6 +1820,19 @@
             return picker;
         };
 
+        picker.incStepping = function (incStepping) {
+            if (arguments.length === 0) {
+                return options.incStepping;
+            }
+
+            incStepping = parseInt(incStepping, 10);
+            if (isNaN(incStepping) || incStepping < 1) {
+                incStepping = 1;
+            }
+            options.incStepping = incStepping;
+            return picker;
+        };
+
         picker.useCurrent = function (useCurrent) {
             var useCurrentOptions = ['year', 'month', 'day', 'hour', 'minute'];
             if (arguments.length === 0) {
@@ -2426,6 +2451,7 @@
         dayViewHeaderFormat: 'MMMM YYYY',
         extraFormats: false,
         stepping: 1,
+        incStepping: 5,
         minDate: false,
         maxDate: false,
         useCurrent: true,
@@ -2501,7 +2527,7 @@
                 if (widget.find('.datepicker').is(':visible')) {
                     this.date(d.clone().subtract(7, 'd'));
                 } else {
-                    this.date(d.clone().add(this.stepping(), 'm'));
+                    this.date(d.clone().add(this.incStepping(), 'm'));
                 }
             },
             down: function (widget) {
@@ -2513,7 +2539,7 @@
                 if (widget.find('.datepicker').is(':visible')) {
                     this.date(d.clone().add(7, 'd'));
                 } else {
-                    this.date(d.clone().subtract(this.stepping(), 'm'));
+                    this.date(d.clone().subtract(this.incStepping(), 'm'));
                 }
             },
             'control up': function (widget) {
